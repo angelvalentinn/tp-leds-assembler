@@ -1,0 +1,493 @@
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;***************************************************************************
+                      00002 ; Programa main.asm (PIC16F628A)        Fecha de inicio de proyecto: 28-10-2023 
+                      00003 ; Autor: Angel Valentin Altieri                                                                         
+                                            
+                      00004 ; Programa que en base a un circuito del PIC16F628A con los LEDS, RB0,RB1,RB2 y RB3, controla
+                      00005 ; los mismos
+                      00006 ; - Velocidad del Reloj: 4MHz           - Tipo de Reloj: Interno                                
+                      00007 ; - Perro guardián: OFF                 - Protección de código: OFF                                     
+                                                                            
+                      00008 ;***************************************************************************
+                      00009         
+2007   3F10           00010          __CONFIG 3F10
+                      00011          LIST           P=16F628A
+                      00012          INCLUDE        <P16F628A.INC>
+                      00001         LIST
+                      00002 ; P16F628A.INC  Standard Header File, Version 1.10    Microchip Technology, Inc.
+                      00265         LIST
+                      00266 
+                      00013 
+                      00014 ;***************************************************************************
+                      00015 ; Declaracion de variables                                                                              
+                                                    
+                      00016 ;***************************************************************************
+                      00017         CBLOCK 0x20
+                      00018                 
+  00000020            00019     CONT1               ;0X20 Registros para los distintos retardos
+  00000021            00020         CONT2                   ;0X21
+  00000022            00021         CONT3                   ;0X22   
+  00000023            00022         CONT4                   ;0X23   
+  00000024            00023         CONT5                   ;0X24   
+                      00024 
+                      00025         ENDC
+                      00026 
+                      00027         #DEFINE BANCO_0 BCF STATUS,RP0  ; Definimos macros para cambiar de bancos 
+                      00028         #DEFINE BANCO_1 BSF STATUS,RP0
+                      00029 
+                      00030         ORG 0x00
+                      00031 
+0000   2???           00032         CALL CONFIGURAR_PUERTOS  ; Subrutina que configura los puertos como salida y deja los LEDS OFF
+                      00033 
+0001   2???           00034         GOTO INICIO
+                      00035         
+0002                  00036 INICIO  ;Inicio del programa
+                      00037         
+                      00038         ;Punto 1
+0002   2???           00039         CALL ENCENDER_LEDS                              ;enciende los leds RB0,RB1,RB2 y RB3
+0003   2???           00040         CALL DELAY_5S                                   ;genera delay de 5s para poder verlo
+                      00041         
+                      00042         ;Punto 2
+0004   2???           00043         CALL ENCENDER_Y_APAGAR_1S               ;enciende los leds con demora de 1s entre ellos
+0005   2???           00044         CALL DELAY_5S                                   ;genera delay de 5s para poder verlo
+                      00045         
+                      00046         ;Punto 3
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0006   2???           00047         CALL ENCENDER_Y_APAGAR_1S_500MS ;enciende los leds 1segundo prendidos y 500ms apagados
+0007   2???           00048         CALL DELAY_5S                                   ;genera delay de 5s para poder verlo
+                      00049         
+                      00050         ;Punto 4
+0008   2???           00051         CALL ENCENDER_UNO_X_UNO_500MS   ;enciende los leds desde RB0 hasta RB3 con demora de 500ms
+0009   2???           00052         CALL DELAY_5S                           ;genera delay de 5s para poder verlo
+                      00053 
+000A                  00054 BUCLE
+000A   2???           00055         CALL ENCENDER_Y_APAGAR_UPU_500MS;enciende los leds desde RB0 hasta RB3 y los apaga desde RB0 has
+                            ta RB3 con 500ms de demora
+000B   2???           00056         GOTO BUCLE                                              ;Repetimos el bucle indefinidamente
+                      00057 
+                      00058 ;***************************************************************************
+                      00059 ; Subrutina que configura los puertos                                                                   
+                                                            
+                      00060 ;***************************************************************************
+000C                  00061 CONFIGURAR_PUERTOS
+000C   1683           00062         BANCO_1                             ; Vamos al banco 1 para manipular el TRISB
+000D   30F0           00063         MOVLW   B'11110000'             ; Cargamos en W con 0 los valores que querramos como salida
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000E   0086           00064         MOVWF   TRISB                   ; Se lo asignamos TRISB
+                      00065 
+000F   1283           00066         BANCO_0                             ; Volvemos al banco 0 para manipular PORTB
+0010   0186           00067         CLRF PORTB                              ; Dejamos los LEDS apagados por defecto con 0
+                      00068 
+0011   0008           00069         RETURN
+                      00070 
+                      00071 ;***************************************************************************
+                      00072 ; Subrutina de LEDS                                                                                     
+                                    
+                      00073 ;***************************************************************************
+0012                  00074 ENCENDER_LEDS
+0012   1283           00075         BANCO_0                         ; Vamos al banco 0 para manipular los puertos
+0013   300F           00076         MOVLW   B'00001111' ; Ponemos en 1 los puertos RB0,RB1,RB2 y RB3
+0014   0086           00077         MOVWF   PORTB           ; Se lo asignamos a PORTB para encenderlos
+0015   0008           00078         RETURN
+                      00079 
+0016                  00080 APAGAR_LEDS
+0016   1283           00081         BANCO_0                         ; Vamos al banco 0 para manipular los puertos
+0017   3000           00082         MOVLW   B'00000000' ; Ponemos en 0 los puertos RB0,RB1,RB2 y RB3
+0018   0086           00083         MOVWF   PORTB           ; Se lo asignamos a PORTB para apagarlos
+0019   0008           00084         RETURN
+                      00085 
+001A                  00086 ENCENDER_Y_APAGAR_1S
+                      00087                 
+001A   2???           00088                 CALL ENCENDER_LEDS      ; Encendemos todos los LEDS 
+                      00089                 
+001B   2???           00090                 CALL DELAY_1S           ; Generamos un delay de 1 segundo
+                      00091                 
+001C   2???           00092                 CALL APAGAR_LEDS        ; Apagamos todos los LEDS
+                      00093                 
+001D   2???           00094                 CALL DELAY_1S           ; Generamos un delay de 1 segundo
+                      00095                 
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+001E   0008           00096                 RETURN
+                      00097 
+001F                  00098 ENCENDER_Y_APAGAR_1S_500MS
+                      00099 
+001F   2???           00100                 CALL ENCENDER_LEDS ; Encendemos todos los LEDS 
+                      00101                 
+0020   2???           00102                 CALL DELAY_1S      ; Generamos un delay de 1 segundo
+                      00103                 
+0021   2???           00104                 CALL APAGAR_LEDS   ; Apagamos todos los LEDS
+                      00105 
+0022   2???           00106                 CALL DELAY_250MS
+0023   2???           00107                 CALL DELAY_250MS   ; Generamos un delay de 500MS
+                      00108                 
+0024   0008           00109                 RETURN
+                      00110 
+0025                  00111 ENCENDER_UNO_X_UNO_500MS
+                      00112                 
+0025   1283           00113                 BANCO_0                         ; Vamos al banco 0 para manipular los puertos
+0026   3001           00114                 MOVLW B'00000001'       ; Prendemos primero el LED RB0
+0027   0086           00115                 MOVWF PORTB
+                      00116 
+0028   2???           00117                 CALL DELAY_250MS        ; Esperamos 500ms
+0029   2???           00118                 CALL DELAY_250MS
+                      00119 
+002A   3003           00120                 MOVLW B'00000011'       ; Prendemos el LED RB1
+002B   0086           00121                 MOVWF PORTB     
+                      00122 
+002C   2???           00123                 CALL DELAY_250MS        ; Esperamos 500ms
+002D   2???           00124                 CALL DELAY_250MS
+                      00125 
+002E   3007           00126                 MOVLW B'00000111'       ; Prendemos el LED RB2
+002F   0086           00127                 MOVWF PORTB
+                      00128 
+0030   2???           00129                 CALL DELAY_250MS        ; Esperamos 500ms
+0031   2???           00130                 CALL DELAY_250MS
+                      00131 
+0032   300F           00132                 MOVLW B'00001111'       ; Prendemos el LED RB2
+0033   0086           00133                 MOVWF PORTB
+                      00134 
+0034   2???           00135                 CALL DELAY_250MS        ; Esperamos 500ms
+0035   2???           00136                 CALL DELAY_250MS
+                      00137                 
+0036   0008           00138                 RETURN
+                      00139 
+0037                  00140 ENCENDER_Y_APAGAR_UPU_500MS     ; Encender y apagar uno por uno con demora de 500ms
+                      00141                 ; Comenzamos prendiendolos
+0037   1283           00142                 BANCO_0                         ; Vamos al banco 0 para manipular los puertos
+0038   3001           00143                 MOVLW B'00000001'       ; Prendemos primero el LED RB0
+0039   0086           00144                 MOVWF PORTB
+                      00145 
+003A   2???           00146                 CALL DELAY_250MS        ; Esperamos 500ms
+003B   2???           00147                 CALL DELAY_250MS
+                      00148 
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+003C   3003           00149                 MOVLW B'00000011'       ; Prendemos el LED RB1
+003D   0086           00150                 MOVWF PORTB     
+                      00151 
+003E   2???           00152                 CALL DELAY_250MS        ; Esperamos 500ms
+003F   2???           00153                 CALL DELAY_250MS
+                      00154 
+0040   3007           00155                 MOVLW B'00000111'       ; Prendemos el LED RB2
+0041   0086           00156                 MOVWF PORTB
+                      00157 
+0042   2???           00158                 CALL DELAY_250MS        ; Esperamos 500ms
+0043   2???           00159                 CALL DELAY_250MS
+                      00160 
+0044   300F           00161                 MOVLW B'00001111'       ; Prendemos el LED RB3
+0045   0086           00162                 MOVWF PORTB
+                      00163 
+0046   2???           00164                 CALL DELAY_250MS        ; Esperamos 500ms
+0047   2???           00165                 CALL DELAY_250MS
+                      00166                 
+                      00167                 ; Una vez prendidos, empezamos a apagarlos 
+0048   3007           00168                 MOVLW B'00000111'       ; Apagamos primero el LED RB3
+0049   0086           00169                 MOVWF PORTB
+                      00170 
+004A   2???           00171                 CALL DELAY_250MS        ; Esperamos 500ms
+004B   2???           00172                 CALL DELAY_250MS
+                      00173 
+004C   3003           00174                 MOVLW B'00000011'       ; Apagamos el LED RB2
+004D   0086           00175                 MOVWF PORTB     
+                      00176 
+004E   2???           00177                 CALL DELAY_250MS        ; Esperamos 500ms
+004F   2???           00178                 CALL DELAY_250MS
+                      00179 
+0050   3001           00180                 MOVLW B'00000001'       ; Apagamos el LED RB1
+0051   0086           00181                 MOVWF PORTB
+                      00182 
+0052   2???           00183                 CALL DELAY_250MS        ; Esperamos 500ms
+0053   2???           00184                 CALL DELAY_250MS
+                      00185 
+0054   3000           00186                 MOVLW B'00000000'       ; Apagamos el LED RB0
+0055   0086           00187                 MOVWF PORTB
+                      00188 
+0056   2???           00189                 CALL DELAY_250MS        ; Esperamos 500ms
+0057   2???           00190                 CALL DELAY_250MS
+                      00191                 
+0058   0008           00192                 RETURN
+                      00193 
+                      00194 
+                      00195 ;***************************************************************************
+                      00196 ; Subrutinas de demoras                                                                                 
+                      00197 ;***************************************************************************
+0059                  00198 DELAY_1MS
+0059   30FA           00199         MOVLW   D'250'          ; Cargar 250 en W
+005A   00A0           00200         MOVWF   CONT1           ; Lo asigno a CONT1
+005B                  00201 LOOP    
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+005B   0000           00202         NOP                                     ; No hace nada, consume 4 ciclos reloj = 1 ciclo de inst
+                            ruccion
+005C   0BA0           00203         DECFSZ  CONT1,F         ; Decrementa CONT1, cuando sea 0 salta
+005D   2???           00204         GOTO    LOOP            ; Regresa a LOOP
+005E   0008           00205         RETURN
+                      00206 
+005F                  00207 DELAY_250MS
+005F   30FA           00208         MOVLW   D'250'          ; Cargamos 250 en W
+0060   00A1           00209         MOVWF   CONT2           ; Lo aisgno a CONT1
+0061                  00210 LOOP_2  
+0061   2???           00211         CALL    DELAY_1MS       ; Llamamos a DELAY_1MS 
+0062   0BA1           00212         DECFSZ  CONT2,F         ; Se decrementa CONT2, cuando sea 0 salta    Se ejecutará 250 * 1ms = 25
+                            0ms
+0063   2???           00213         GOTO    LOOP_2          ; Regresa a LOOP_2
+0064   0008           00214         RETURN
+                      00215 
+0065                  00216 DELAY_1S
+0065   3004           00217         MOVLW   D'4'            ; Cargamos 4 en W
+0066   00A2           00218         MOVWF   CONT3           ; Lo asigno en CONT3
+0067                  00219 LOOP_3
+0067   2???           00220         CALL    DELAY_250MS     ; Llamamos a DELAY_250MS
+0068   0BA2           00221         DECFSZ  CONT3,F         ; Se decrementa CONT3, cuando sea 0 salta    Se ejecutará 4 * 250ms = 1s
+0069   2???           00222         GOTO    LOOP_3      ; Regresa a LOOP_3
+006A   0008           00223         RETURN
+                      00224 
+006B                  00225 DELAY_5S                
+006B   3005           00226                 MOVLW D'5'              ; Cargamos 5 en W               
+006C   00A4           00227                 MOVWF CONT5             ; Lo asignamos en CONT4
+006D                  00228 LOOP_4                                  
+006D   2???           00229                 CALL DELAY_1S   ; Llamamos a DELAY_1S           
+006E   0BA4           00230                 DECFSZ CONT5,F  ; Se decrementa CONT4, cuando sea 0 salta    Se ejecutará 5 * 1s = 1s   
+006F   2???           00231                 GOTO LOOP_4             ; Regresa a LOOP_4
+0070   0008           00232                 RETURN
+3F10                  00233                 END
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  6
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ADEN                              00000003
+APAGAR_LEDS                       00000016
+BANCO_0                           BCF STATUS,RP0
+BANCO_1                           BSF STATUS,RP0
+BRGH                              00000002
+BUCLE                             0000000A
+C                                 00000000
+C1INV                             00000004
+C1OUT                             00000006
+C2INV                             00000005
+C2OUT                             00000007
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCPR1H                            00000016
+CCPR1L                            00000015
+CIS                               00000003
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             0000001F
+CMIE                              00000006
+CMIF                              00000006
+CONFIGURAR_PUERTOS                0000000C
+CONT1                             00000020
+CONT2                             00000021
+CONT3                             00000022
+CONT4                             00000023
+CONT5                             00000024
+CREN                              00000004
+CSRC                              00000007
+DC                                00000001
+DELAY_1MS                         00000059
+DELAY_1S                          00000065
+DELAY_250MS                       0000005F
+DELAY_5S                          0000006B
+EEADR                             0000009B
+EECON1                            0000009C
+EECON2                            0000009D
+EEDATA                            0000009A
+EEIE                              00000007
+EEIF                              00000007
+ENCENDER_LEDS                     00000012
+ENCENDER_UNO_X_UNO_500MS          00000025
+ENCENDER_Y_APAGAR_1S              0000001A
+ENCENDER_Y_APAGAR_1S_500MS        0000001F
+ENCENDER_Y_APAGAR_UPU_500MS       00000037
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  7
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+GIE                               00000007
+INDF                              00000000
+INICIO                            00000002
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+LOOP                              0000005B
+LOOP_2                            00000061
+LOOP_3                            00000067
+LOOP_4                            0000006D
+NOT_BO                            00000000
+NOT_BOD                           00000000
+NOT_BOR                           00000000
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+OERR                              00000001
+OPTION_REG                        00000081
+OSCF                              00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PIE1                              0000008C
+PIR1                              0000000C
+PORTA                             00000005
+PORTB                             00000006
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+RBIE                              00000003
+RBIF                              00000000
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RP0                               00000005
+RP1                               00000006
+RX9                               00000006
+RX9D                              00000000
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  8
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+STATUS                            00000003
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1OSCEN                           00000003
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISB                             00000086
+TRMT                              00000001
+TX9                               00000006
+TX9D                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             0000009F
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+W                                 00000000
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+MPASM  5.31                          LEDS.ASM   10-29-2023  22:22:05         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_BOREN_OFF                        00003FBF
+_BOREN_ON                         00003FFF
+_CP_OFF                           00003FFF
+_CP_ON                            00001FFF
+_DATA_CP_OFF                      00003FFF
+_DATA_CP_ON                       00003EFF
+_ER_OSC_CLKOUT                    00003FFF
+_ER_OSC_NOCLKOUT                  00003FFE
+_EXTCLK_OSC                       00003FEF
+_HS_OSC                           00003FEE
+_INTOSC_OSC_CLKOUT                00003FFD
+_INTOSC_OSC_NOCLKOUT              00003FFC
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FEC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC_CLKOUT                    00003FFF
+_RC_OSC_NOCLKOUT                  00003FFE
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_XT_OSC                           00003FED
+__16F628A                         00000001
+__DEBUG                           1
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     1 reported,     0 suppressed
+
+
